@@ -16,16 +16,22 @@ public class LimitOrderAgent implements PriceListener {
 
     @Override
     public void priceTick(String productId, BigDecimal price) {
-        
-        if( transactionType == TransactionType.BUY) {
-            if ( price <= limit) {
-               
-                m_executionClient.buy(productId, amount);
-            } 
-        } else if (transactionType == TransactionType.SELL) {
-            
-            m_executionClient.sell(productId, amount);
-        }   
+       
+        if (cacheOrders.size() < 1) {
+            return;
+        }
+        List<Order> executedOrders = new ArrayList<>();
+        for (Order order : cacheOrders) { 
+            if( transactionType == TransactionType.BUY) {
+                if ( price <= limit) {
+                   m_executionClient.buy(productId, amount);
+                } 
+            } else if (transactionType == TransactionType.SELL) {
+                m_executionClient.sell(productId, amount);
+            }  
+            executedOrders.add(order);
+        } 
+        cacheOrders.removeAll(executedOrders);
     }
 
     public void addOrder(TransactionType transactionType, String productId, 
